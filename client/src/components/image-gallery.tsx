@@ -14,11 +14,12 @@ const ImageGallery = () => {
   const [page, setPage] = useState<number>(1);
   const [isLoadMore, setIsLoadMore] = useState(true);
   const [initialized, setInitialized] = useState(false); // เพิ่ม state เพื่อควบคุมการโหลดครั้งแรก
+  const [keywordFilter, setKeywordFilter] = useState('');
   
   const loadMoreImages = useCallback(async () => {
     if (loading) return;
     setLoading(true);
-    const imageData = await getImages(page,9);
+    const imageData = await getImages(page,9,keywordFilter);
     if (!imageData.pagination.hasMore) {
       setIsLoadMore(false);
     } else {
@@ -27,8 +28,6 @@ const ImageGallery = () => {
     }
     setLoading(false);
   }, [page, loading]);
-  
-
   // แยก useEffect load data
   useEffect(() => {
     if (!initialized) {
@@ -53,7 +52,9 @@ const ImageGallery = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loading, isLoadMore, loadMoreImages]);
-
+  const keyWordClicked = (keyword:string) =>{
+      setKeywordFilter(keyword);
+  }
   return (
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -69,7 +70,7 @@ const ImageGallery = () => {
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {image.keywords.map((keyword, idx) => (
-                  <Badge key={idx} variant="secondary">
+                  <Badge key={idx} variant="secondary" onClick={() => keyWordClicked(keyword)}>
                     {keyword}
                   </Badge>
                 ))}

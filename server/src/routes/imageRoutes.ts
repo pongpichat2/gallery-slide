@@ -7,7 +7,11 @@ router.get('/', (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 9;
-    const result = imageService.getImages(page, pageSize);
+    const keyword = req.query.keyword as string;
+
+    const result = keyword 
+      ? imageService.searchByKeyword(keyword, page, pageSize)
+      : imageService.getImages(page, pageSize);
     
     res.json(result);
   } catch (error) {

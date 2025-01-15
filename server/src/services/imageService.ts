@@ -18,6 +18,33 @@ class ImageService {
       }
     };
   }
+
+  public searchByKeyword(
+    keyword: string,
+    page: number = 1, 
+    pageSize: number = 9
+  ): PaginationResult<Image> {
+    const filteredImages = images.filter(image => 
+      image.keywords.some(imgKeyword => 
+        imgKeyword.toLowerCase().includes(keyword.toLowerCase())
+      )
+    );
+
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedImages = filteredImages.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedImages,
+      pagination: {
+        currentPage: page,
+        pageSize: pageSize,
+        totalItems: filteredImages.length,
+        totalPages: Math.ceil(filteredImages.length / pageSize),
+        hasMore: endIndex < filteredImages.length
+      }
+    };
+  }
 }
 
 export default new ImageService();
