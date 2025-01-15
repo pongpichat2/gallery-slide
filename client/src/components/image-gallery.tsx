@@ -13,35 +13,69 @@ const ImageGallery = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState<number>(1);
   const [isLoadMore, setIsLoadMore] = useState(true);
-  const [initialized, setInitialized] = useState(false); // เพิ่ม state เพื่อควบคุมการโหลดครั้งแรก
-  const [keywordFilter, setKeywordFilter] = useState('');
+  const [initialized, setInitialized] = useState(false);
+  const [keyword, setKeyword] = useState('');
   
-  const loadMoreImages = useCallback(async () => {
+  // load data is first
+  const loadInitialImages = useCallback(async (searchKeyword: string) => {
     if (loading) return;
     setLoading(true);
-    const imageData = await getImages(page,9,keywordFilter);
-    if (!imageData.pagination.hasMore) {
+    
+    try {
+      const imageData = await getImages(1, 9, searchKeyword);
+      console.log('Initial load:', imageData);
+      
+      setImages(imageData.data);
+      setIsLoadMore(imageData.pagination.hasMore);
+      setPage(2);
+    } catch (error) {
+      console.error('Error loading initial images:', error);
+      setImages([]);
       setIsLoadMore(false);
-    } else {
-      setImages(prevImages => [...prevImages, ...imageData.data]);
-      setPage(prev => prev + 1);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [page, loading]);
-  // แยก useEffect load data
+  }, [loading]);
+  
+  const loadMoreImages = useCallback(async () => {
+    if (loading || !isLoadMore) return;
+    setLoading(true);
+    try {
+      const imageData = await getImages(page, 9, keyword);
+      console.log('Load more:', imageData);
+      if (imageData.data.length > 0) {
+        setImages(prevImages => [...prevImages, ...imageData.data]);
+        setPage(prev => prev + 1);
+      }
+      setIsLoadMore(imageData.pagination.hasMore);
+    } catch (error) {
+      console.error('Error loading more images:', error);
+      setIsLoadMore(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, loading, keyword, isLoadMore]);
+  
+  const keyWordClicked = useCallback((newKeyword: string) => {
+    if (loading) return;
+    setKeyword(newKeyword);
+    setIsLoadMore(true);
+    loadInitialImages(newKeyword);
+  }, [loading, loadInitialImages]);
+  
+  // Initial load data 
   useEffect(() => {
     if (!initialized) {
-      loadMoreImages();
+      loadInitialImages('');
       setInitialized(true);
     }
-  }, [initialized, loadMoreImages]);
+  }, [initialized, loadInitialImages]);
   
-  // useEffect for scroll
   useEffect(() => {
     const handleScroll = () => {
       if (
         window.innerHeight + document.documentElement.scrollTop
-        >= document.documentElement.offsetHeight - 100 // เพิ่ม threshold
+        >= document.documentElement.offsetHeight - 100
       ) {
         if (!loading && isLoadMore) {
           loadMoreImages();
@@ -52,9 +86,7 @@ const ImageGallery = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loading, isLoadMore, loadMoreImages]);
-  const keyWordClicked = (keyword:string) =>{
-      setKeywordFilter(keyword);
-  }
+
   return (
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
