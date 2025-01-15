@@ -1,0 +1,1 @@
+{"root":["./src/app.ts","./src/config/config.ts","./src/data/images.ts","./src/routes/imageroutes.ts","./src/services/imageservice.ts","./src/types/image.ts"],"version":"5.7.3"}
